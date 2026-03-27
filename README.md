@@ -1,24 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## TrackPro
+
+منصة لإدارة طلبات الفرع (طباعة/تصميم/فني/هدايا) مبنية بـ Next.js.
+
+- **الاستضافة**: Vercel
+- **قاعدة البيانات**: Postgres عبر Neon (من Vercel Storage)
+- **تسجيل الدخول**: Auth.js (next-auth) بكلمة مرور
+- **ORM**: Prisma
 
 ## Getting Started
 
-First, run the development server:
+### تشغيل محليًا
+
+1) أنشئ ملف `.env.local` وضع:
+
+```env
+DATABASE_URL=postgresql://...
+AUTH_SECRET=any-long-random-string
+```
+
+2) ثم شغّل:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+افتح `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### نشر على Vercel (بدون Supabase)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1) في Vercel افتح مشروع `track-pro`.
+2) من **Storage** أنشئ قاعدة **Neon Postgres** ثم **Connect** للمشروع.
+   - هذا سيضيف تلقائيًا `DATABASE_URL` لمتغيرات البيئة.
+3) من **Settings → Environment Variables** أضف:
+   - `AUTH_SECRET`
+4) اعمل Deploy/Redeploy.
+
+ملاحظة: سكربت البناء يقوم بتشغيل `prisma db push` تلقائيًا على Vercel لإنشاء الجداول.
 
 ## Learn More
 
