@@ -24,6 +24,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        if (!process.env.DATABASE_URL) return null;
+
         const parsed = CredentialsSchema.safeParse(credentials);
         if (!parsed.success) return null;
 

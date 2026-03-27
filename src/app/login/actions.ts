@@ -12,6 +12,13 @@ export async function registerUser(
   _prev: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
+  if (!process.env.DATABASE_URL) {
+    return {
+      error:
+        "قاعدة البيانات غير مهيّأة (DATABASE_URL). ضع DATABASE_URL في .env.local ثم أعد تشغيل السيرفر.",
+    };
+  }
+
   const name = String(formData.get("fullName") ?? "").trim() || null;
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -39,6 +46,13 @@ export async function loginUser(
   _prev: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
+  if (!process.env.DATABASE_URL) {
+    return {
+      error:
+        "قاعدة البيانات غير مهيّأة (DATABASE_URL). ضع DATABASE_URL في .env.local ثم أعد تشغيل السيرفر.",
+    };
+  }
+
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
