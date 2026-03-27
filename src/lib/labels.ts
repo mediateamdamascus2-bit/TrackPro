@@ -27,6 +27,11 @@ export const ROLE_LABELS: Record<string, string> = {
   manager: "مدير",
   communication_officer: "مسؤول تواصل",
   department_staff: "موظف قسم",
+
+  // Prisma enums (uppercase)
+  MANAGER: "مدير",
+  COMMUNICATION_OFFICER: "مسؤول تواصل",
+  DEPARTMENT_STAFF: "موظف قسم",
 };
 
 export const EVENT_LABELS: Record<string, string> = {

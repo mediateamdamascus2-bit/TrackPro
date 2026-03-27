@@ -1,8 +1,9 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { loginUser, registerUser, type LoginActionState } from "./actions";
+import { useActionState } from "react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -15,94 +16,23 @@ export function LoginForm() {
   const [fullName, setFullName] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
+  const [state, formAction, isPending] = useActionState(
+    async (prev: LoginActionState, fd: FormData) =>
+      mode === "login" ? loginUser(prev, fd) : registerUser(prev, fd),
+    null as LoginActionState,
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
     setLoading(true);
-
-    try {
-      let supabase;
-      try {
-        supabase = createClient();
-      } catch (err) {
-        setMessage("Supabase غير مهيّأ. أضف مفاتيح Supabase ثم أعد تشغيل التطبيق.");
-        return;
-      }
-
-      if (mode === "register") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: fullName },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-          },
-        });
-        if (error) {
-          setMessage(error.message);
-          return;
-        }
-        setMessage(
-          "تم إنشاء الحساب. إن كان التأكيد بالبريد مفعّلًا، راجع بريدك ثم سجّل الدخول.",
-        );
-        setMode("login");
-        return;
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        setMessage(error.message);
-        return;
-      }
-
-      router.push(next.startsWith("/") ? next : "/dashboard");
-      router.refresh();
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleResendConfirmation() {
-    const emailValue = email.trim();
-    if (!emailValue) {
-      setMessage("اكتب البريد أولًا ثم أعد الإرسال.");
-      return;
-    }
-
-    setResendLoading(true);
-    setMessage(null);
-
-    try {
-      let supabase;
-      try {
-        supabase = createClient();
-      } catch {
-        setMessage("Supabase غير مهيّأ. أضف مفاتيح Supabase ثم أعد تشغيل التطبيق.");
-        return;
-      }
-
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: emailValue,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        },
-      });
-
-      if (error) {
-        setMessage(error.message);
-        return;
-      }
-
-      setMessage("تمت إعادة إرسال رسالة التأكيد. افحص البريد وSpam.");
-    } finally {
-      setResendLoading(false);
-    }
+    const fd = new FormData();
+    fd.set("email", email);
+    fd.set("password", password);
+    fd.set("fullName", fullName);
+    await formAction(fd);
+    router.refresh();
+    setLoading(false);
   }
 
   return (
@@ -181,25 +111,19 @@ export function LoginForm() {
       {message && (
         <p className="text-sm text-amber-800 dark:text-amber-200">{message}</p>
       )}
+      {(state?.error || state?.ok) && (
+        <p className="text-sm text-amber-800 dark:text-amber-200">
+          {state.error ?? state.ok}
+        </p>
+      )}
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || isPending}
         className="rounded-lg bg-emerald-800 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-600"
       >
         {loading ? "جارٍ التنفيذ…" : mode === "login" ? "دخول" : "تسجيل"}
       </button>
-
-      {mode === "login" && (
-        <button
-          type="button"
-          onClick={handleResendConfirmation}
-          disabled={resendLoading}
-          className="text-sm text-zinc-600 underline hover:text-zinc-900 disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200"
-        >
-          {resendLoading ? "جارٍ إعادة الإرسال…" : "إعادة إرسال رسالة التأكيد"}
-        </button>
-      )}
 
       <p className="text-center text-xs text-zinc-500">
         أول مستخدم؟ سجّل حسابًا ثم اجعل المدير يحدّث دورك في جدول{" "}

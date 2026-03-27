@@ -1,24 +1,17 @@
-import { createClient } from "@/lib/supabase/server";
 import { NewRequestForm } from "./new-request-form";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { db } from "@/lib/db";
 
 export default async function NewRequestPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const userId = session.user.id as string | undefined;
+  if (!userId) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profile?.role === "department_staff") {
-    redirect("/dashboard");
-  }
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user || user.role === "DEPARTMENT_STAFF") redirect("/dashboard");
 
   return (
     <div className="space-y-8">

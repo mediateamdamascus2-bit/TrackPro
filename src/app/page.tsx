@@ -1,22 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { auth } from "@/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const configured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
-
-  if (configured) {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      redirect("/dashboard");
-    }
-  }
+  const session = await auth();
+  if (session?.user) redirect("/dashboard");
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
