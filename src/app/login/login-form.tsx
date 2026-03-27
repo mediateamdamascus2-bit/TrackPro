@@ -15,6 +15,7 @@ export function LoginForm() {
   const [fullName, setFullName] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +64,44 @@ export function LoginForm() {
       router.refresh();
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    const emailValue = email.trim();
+    if (!emailValue) {
+      setMessage("اكتب البريد أولًا ثم أعد الإرسال.");
+      return;
+    }
+
+    setResendLoading(true);
+    setMessage(null);
+
+    try {
+      let supabase;
+      try {
+        supabase = createClient();
+      } catch {
+        setMessage("Supabase غير مهيّأ. أضف مفاتيح Supabase ثم أعد تشغيل التطبيق.");
+        return;
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: emailValue,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
+      });
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      setMessage("تمت إعادة إرسال رسالة التأكيد. افحص البريد وSpam.");
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -150,6 +189,17 @@ export function LoginForm() {
       >
         {loading ? "جارٍ التنفيذ…" : mode === "login" ? "دخول" : "تسجيل"}
       </button>
+
+      {mode === "login" && (
+        <button
+          type="button"
+          onClick={handleResendConfirmation}
+          disabled={resendLoading}
+          className="text-sm text-zinc-600 underline hover:text-zinc-900 disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          {resendLoading ? "جارٍ إعادة الإرسال…" : "إعادة إرسال رسالة التأكيد"}
+        </button>
+      )}
 
       <p className="text-center text-xs text-zinc-500">
         أول مستخدم؟ سجّل حسابًا ثم اجعل المدير يحدّث دورك في جدول{" "}
