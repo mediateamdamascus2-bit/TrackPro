@@ -15,29 +15,15 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [state, formAction, isPending] = useActionState(
     async (prev: LoginActionState, fd: FormData) =>
       mode === "login" ? loginUser(prev, fd) : registerUser(prev, fd),
     null as LoginActionState,
   );
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setMessage(null);
-    setLoading(true);
-    const fd = new FormData();
-    fd.set("email", email);
-    fd.set("password", password);
-    fd.set("fullName", fullName);
-    await formAction(fd);
-    router.refresh();
-    setLoading(false);
-  }
-
   return (
     <form
-      onSubmit={handleSubmit}
+      action={formAction}
       className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="flex gap-2 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
@@ -70,6 +56,7 @@ export function LoginForm() {
           <span className="text-zinc-600 dark:text-zinc-400">الاسم</span>
           <input
             required
+            name="fullName"
             type="text"
             autoComplete="name"
             value={fullName}
@@ -83,6 +70,7 @@ export function LoginForm() {
         <span className="text-zinc-600 dark:text-zinc-400">البريد</span>
         <input
           required
+          name="email"
           type="email"
           autoComplete="email"
           value={email}
@@ -96,6 +84,7 @@ export function LoginForm() {
         <span className="text-zinc-600 dark:text-zinc-400">كلمة المرور</span>
         <input
           required
+          name="password"
           type="password"
           autoComplete={
             mode === "register" ? "new-password" : "current-password"
@@ -119,10 +108,10 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={loading || isPending}
+        disabled={isPending}
         className="rounded-lg bg-emerald-800 py-2.5 text-sm font-medium text-white hover:bg-emerald-900 disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-600"
       >
-        {loading ? "جارٍ التنفيذ…" : mode === "login" ? "دخول" : "تسجيل"}
+        {isPending ? "جارٍ التنفيذ…" : mode === "login" ? "دخول" : "تسجيل"}
       </button>
 
       <p className="text-center text-xs text-zinc-500">
